@@ -35,6 +35,7 @@ class SettingsActivity : AppCompatActivity() {
     val logger = LoggerFactory.getLogger(this.javaClass)
     var hasFloatWindow = false
     override fun onCreate(savedInstanceState: Bundle?) {
+        instant = this
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_activity)
         supportFragmentManager
@@ -48,7 +49,6 @@ class SettingsActivity : AppCompatActivity() {
         initFloatWindow()
 
         this.onResume()
-        instant = this
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
@@ -129,7 +129,8 @@ class SettingsActivity : AppCompatActivity() {
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivity(intent);
         } else {
-            startService(Intent(this, MyAccessibilityService2::class.java))
+//            startService(Intent(this, MyAccessibilityService2::class.java))
+//            MyAccessibilityService2.instant.connect()
         }
     }
 
