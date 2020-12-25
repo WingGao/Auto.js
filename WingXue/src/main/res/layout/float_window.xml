@@ -10,6 +10,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" android:id="@+id/btnStart"
             style="@style/Widget.AppCompat.Button.Small"/>
+    <Button
+            android:text="获取空间树"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/btnDebug1"
+            style="@style/Widget.AppCompat.Button.Small"/>
     <TextView
             android:text="未开启"
             android:layout_width="match_parent"

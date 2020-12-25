@@ -44,7 +44,7 @@ open class UiGlobalSelector {
         return this
     }
 
-    fun text(text: String): UiGlobalSelector {
+    open fun text(text: String): UiGlobalSelector {
         mSelector.add(TextFilters.equals(text))
         return this
     }

@@ -84,8 +84,8 @@ class SettingsActivity : AppCompatActivity() {
         FloatWindow
             .with(getApplicationContext())
             .setView(floatView)
-            .setWidth(200)                               //设置控件宽高
-            .setHeight(Screen.width, 0.2f)
+            .setWidth(Screen.width, 0.3f)                               //设置控件宽高
+            .setHeight(Screen.height, 0.3f)
             .setX(100)                                   //设置控件初始位置
             .setY(Screen.height, 0.3f)
             .setDesktopShow(true)                        //桌面显示
@@ -126,6 +126,13 @@ class SettingsActivity : AppCompatActivity() {
                 stateView.text = "开启"
                 GlobalScope.launch {
                     MyAccessibilityService2.instant.startTask()
+                }
+            }
+        }
+        floatView.findViewById<Button>(R.id.btnDebug1).also {
+            it.setOnClickListener {
+                GlobalScope.launch {
+                    MyAccessibilityService2.instant.logAllViewInWindow()
                 }
             }
         }

@@ -18,6 +18,7 @@ import com.stardust.automator.ActionArgument.IntActionArgument
 import com.stardust.automator.ActionArgument.CharSequenceActionArgument
 import com.stardust.automator.ActionArgument.FloatActionArgument
 import com.stardust.automator.filter.Filter
+import com.stardust.automator.filter.TextFilters
 import net.wingao.xue.BuildConfig
 import org.slf4j.LoggerFactory
 import java.lang.Error
@@ -28,7 +29,7 @@ import java.util.ArrayList
  */
 class UiSelector : UiGlobalSelector {
     val logger = LoggerFactory.getLogger(this.javaClass)
-    private var mAccessibilityBridge: AccessibilityBridge
+    private lateinit var mAccessibilityBridge: AccessibilityBridge
     private var mAllocator: AccessibilityNodeInfoAllocator? = null
 
     constructor(accessibilityBridge: AccessibilityBridge) {
@@ -38,6 +39,10 @@ class UiSelector : UiGlobalSelector {
     constructor(accessibilityBridge: AccessibilityBridge, allocator: AccessibilityNodeInfoAllocator?) {
         mAccessibilityBridge = accessibilityBridge
         mAllocator = allocator
+    }
+
+    private val automator: SimpleActionAutomator by lazy {
+        SimpleActionAutomator(this.mAccessibilityBridge)
     }
 
     protected fun find(max: Int): UiObjectCollection {
@@ -215,6 +220,11 @@ class UiSelector : UiGlobalSelector {
         return this
     }
 
+    override fun text(text: String): UiSelector {
+        super.text(text)
+        return this
+    }
+
     private fun performAction(action: Int, vararg arguments: ActionArgument): Boolean {
         return untilFind().performAction(action, *arguments)
     }
@@ -332,4 +342,10 @@ class UiSelector : UiGlobalSelector {
             IntActionArgument(AccessibilityNodeInfoCompat.ACTION_ARGUMENT_COLUMN_INT, column)
         )
     }
+    // 点击屏幕
+    fun clickScreen() {
+        this.automator.click()
+    }
 }
+
+
