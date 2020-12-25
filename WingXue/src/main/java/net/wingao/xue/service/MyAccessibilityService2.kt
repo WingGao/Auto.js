@@ -37,13 +37,13 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
 
     override fun onServiceConnected() {
         bridge = AccessibilityBridgeImpl()
-        mActivityInfoProvider = ActivityInfoProvider(SettingsActivity.instant)
+        mActivityInfoProvider = ActivityInfoProvider(SettingsActivity.instant!!)
         addAccessibilityServiceDelegates()
 
         super.onServiceConnected()
     }
 
-    fun connect(){
+    fun connect() {
         onServiceConnected()
     }
 
@@ -54,14 +54,13 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
     }
 
     fun startTask() {
-        val ok =
-            if (isOnXueApp()) {
-                logger.info("在强国")
-                isMainPage()
-            } else {
-                logger.info("不在强国")
-                Toast.makeText(SettingsActivity.instant, "请打开学习强国", Toast.LENGTH_SHORT)
-            }
+        if (isOnXueApp()) {
+            logger.info("在强国")
+            isMainPage()
+        } else {
+            logger.info("不在强国")
+            Toast.makeText(SettingsActivity.instant, "请打开学习强国", Toast.LENGTH_SHORT)
+        }
     }
 
     fun newSelector(): UiSelector {

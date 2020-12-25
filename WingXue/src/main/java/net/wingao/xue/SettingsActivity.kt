@@ -29,13 +29,21 @@ import kotlin.concurrent.timer
 
 class SettingsActivity : AppCompatActivity() {
     companion object {
-        lateinit var instant: SettingsActivity
+        @JvmStatic
+        var instant: SettingsActivity? = null
     }
+
 
     val logger = LoggerFactory.getLogger(this.javaClass)
     var hasFloatWindow = false
-    override fun onCreate(savedInstanceState: Bundle?) {
+
+    init {
         instant = this
+    }
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        logger.info("创建")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_activity)
         supportFragmentManager
@@ -69,6 +77,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun initFloatWindow() {
+        if (FloatWindow.get() != null) return
         val floatView = LayoutInflater.from(this).inflate(R.layout.float_window, null);
         FloatWindow
             .with(getApplicationContext())
