@@ -2,12 +2,12 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
-      <module name="Autojs.app" target="1.8" />
-      <module name="Autojs.autojs" target="1.8" />
-      <module name="Autojs.automator" target="1.8" />
-      <module name="Autojs.common" target="1.8" />
-      <module name="Autojs.inrt" target="1.8" />
-      <module name="Autojs.WingXue" target="1.8" />
+      <module name="Autojs.app" target="11" />
+      <module name="Autojs.autojs" target="11" />
+      <module name="Autojs.automator" target="11" />
+      <module name="Autojs.common" target="11" />
+      <module name="Autojs.inrt" target="11" />
+      <module name="Autojs.WingXue" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

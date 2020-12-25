@@ -5,6 +5,8 @@ import com.stardust.util.UiHandler
 import com.stardust.view.accessibility.AccessibilityNotificationObserver
 import com.stardust.view.accessibility.AccessibilityService
 import com.stardust.view.accessibility.AccessibilityService.Companion.addDelegate
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.wingao.xue.Consts
 import net.wingao.xue.SettingsActivity
 import net.wingao.xue.auto.AccessibilityBridge
@@ -21,6 +23,7 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
     val logger = LoggerFactory.getLogger(this.javaClass)
     lateinit var bridge: AccessibilityBridge
     lateinit var mActivityInfoProvider: ActivityInfoProvider
+    var connected = false
 
     companion object {
         lateinit var instant: MyAccessibilityService2
@@ -36,15 +39,17 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
     }
 
     override fun onServiceConnected() {
-        bridge = AccessibilityBridgeImpl()
-        mActivityInfoProvider = ActivityInfoProvider(SettingsActivity.instant!!)
-        addAccessibilityServiceDelegates()
+
 
         super.onServiceConnected()
     }
 
     fun connect() {
-        onServiceConnected()
+        if (connected) return
+        connected = true
+        bridge = AccessibilityBridgeImpl()
+        mActivityInfoProvider = ActivityInfoProvider(SettingsActivity.instant!!)
+        addAccessibilityServiceDelegates()
     }
 
 
@@ -53,7 +58,7 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         return mActivityInfoProvider.latestPackage == Consts.XuePackagename
     }
 
-    fun startTask() {
+    suspend fun startTask() {
         if (isOnXueApp()) {
             logger.info("在强国")
             isMainPage()
@@ -74,7 +79,7 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
     }
 
     fun isMainPage(): Boolean {
-        val ok = newSelector().id("home_bottom_bat_icon_large").exists()
+        val ok = newSelector().id("home_bottom_tab_icon_large").exists()
         logger.info("主页按钮 $ok")
         return ok
     }

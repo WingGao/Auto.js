@@ -18,6 +18,8 @@ import com.yhao.floatwindow.FloatWindow
 import com.yhao.floatwindow.PermissionListener
 import com.yhao.floatwindow.Screen
 import com.yhao.floatwindow.ViewStateListener
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.wingao.xue.service.MyAccessibilityService
 import net.wingao.xue.service.MyAccessibilityService2
 import org.slf4j.LoggerFactory
@@ -122,7 +124,9 @@ class SettingsActivity : AppCompatActivity() {
         floatView.findViewById<Button>(R.id.btnStart).also {
             it.setOnClickListener {
                 stateView.text = "开启"
-                MyAccessibilityService2.instant.startTask()
+                GlobalScope.launch {
+                    MyAccessibilityService2.instant.startTask()
+                }
             }
         }
     }
@@ -139,7 +143,7 @@ class SettingsActivity : AppCompatActivity() {
             startActivity(intent);
         } else {
 //            startService(Intent(this, MyAccessibilityService2::class.java))
-//            MyAccessibilityService2.instant.connect()
+            MyAccessibilityService2.instant.connect()
         }
     }
 
