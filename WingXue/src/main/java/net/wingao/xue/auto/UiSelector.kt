@@ -1,5 +1,6 @@
 package net.wingao.xue.auto
 
+import android.graphics.Rect
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
@@ -342,9 +343,11 @@ class UiSelector : UiGlobalSelector {
             IntActionArgument(AccessibilityNodeInfoCompat.ACTION_ARGUMENT_COLUMN_INT, column)
         )
     }
-    // 点击屏幕
+
     fun clickScreen() {
-        this.automator.click()
+        untilFind().toArray().forEach {
+            if (it != null) it.clickScreen()
+        }
     }
 }
 

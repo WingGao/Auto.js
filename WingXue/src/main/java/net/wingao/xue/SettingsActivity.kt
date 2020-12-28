@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
+import com.stardust.util.ScreenMetrics
 import com.yhao.floatwindow.FloatWindow
 import com.yhao.floatwindow.PermissionListener
 import com.yhao.floatwindow.Screen
@@ -58,6 +59,7 @@ class SettingsActivity : AppCompatActivity() {
         }
         initFloatWindow()
 
+        ScreenMetrics.initIfNeeded(this)
         this.onResume()
     }
 
@@ -81,13 +83,14 @@ class SettingsActivity : AppCompatActivity() {
     fun initFloatWindow() {
         if (FloatWindow.get() != null) return
         val floatView = LayoutInflater.from(this).inflate(R.layout.float_window, null);
+        val widthR = 0.3f
         FloatWindow
             .with(getApplicationContext())
             .setView(floatView)
-            .setWidth(Screen.width, 0.3f)                               //设置控件宽高
+            .setWidth(Screen.width, widthR)                               //设置控件宽高
             .setHeight(Screen.height, 0.3f)
-            .setX(100)                                   //设置控件初始位置
-            .setY(Screen.height, 0.3f)
+            .setX(Screen.width, 1 - widthR)  //设置控件初始位置,在右边，防止
+            .setY(Screen.height, 0.8f)
             .setDesktopShow(true)                        //桌面显示
             .setViewStateListener(object : ViewStateListener {
                 override fun onPositionUpdate(p0: Int, p1: Int) {

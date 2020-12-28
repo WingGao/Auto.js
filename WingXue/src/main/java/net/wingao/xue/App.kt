@@ -1,6 +1,7 @@
 package net.wingao.xue
 
 import android.app.Application
+import io.realm.Realm
 import org.slf4j.LoggerFactory
 
 /**
@@ -17,6 +18,7 @@ class App : Application() {
         super.onCreate()
 
         instant = this
+        Realm.init(this);
         logger.info("onCreate instant=${instant}")
     }
 }

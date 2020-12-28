@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 29
@@ -8,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "net.wingao.xue"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -33,9 +35,14 @@ dependencies {
     implementation 'androidx.preference:preference:1.1.0'
     implementation 'org.slf4j:slf4j-android:1.7.30'
     implementation 'com.github.yhaolpz:FloatWindow:1.0.9'
+    implementation 'com.google.android.material:material:1.3.0-beta01'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     api project(path: ':automator')
+}
+
+kapt {
+    useBuildCache = false
 }

@@ -2,6 +2,8 @@ package net.wingao.xue.service
 
 import android.graphics.Rect
 import android.widget.Toast
+import com.stardust.automator.UiObject
+import com.stardust.util.ScreenMetrics
 import com.stardust.util.UiHandler
 import com.stardust.view.accessibility.AccessibilityNotificationObserver
 import com.stardust.view.accessibility.AccessibilityService
@@ -9,10 +11,15 @@ import com.stardust.view.accessibility.AccessibilityService.Companion.addDelegat
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.wingao.xue.App
 import net.wingao.xue.Consts
 import net.wingao.xue.SettingsActivity
 import net.wingao.xue.auto.*
+import net.wingao.xue.entity.Kv
+import net.wingao.xue.entity.save
 import org.slf4j.LoggerFactory
+import java.util.*
+import kotlin.concurrent.scheduleAtFixedRate
 
 /**
  * User: Wing
@@ -20,18 +27,23 @@ import org.slf4j.LoggerFactory
  */
 class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilityService() {
     val logger = LoggerFactory.getLogger(this.javaClass)
+
     lateinit var bridge: AccessibilityBridge
     lateinit var mActivityInfoProvider: ActivityInfoProvider
-    lateinit var automator: SimpleActionAutomator
+
     var connected = false
+    var currentTask: Score? = null
+    var schedule = Timer()
 
 
     val idBtnMainTab = "home_bottom_tab_icon_large" //主页 - 底部大红按钮
+    val idBtnBottomTab = "home_bottom_tab_icon_group" //主页 - 底部小按钮
     //剩余要获取积分
 
 
     companion object {
         lateinit var instant: MyAccessibilityService2
+        lateinit var automator: SimpleActionAutomator
     }
 
     init {
@@ -44,8 +56,6 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
     }
 
     override fun onServiceConnected() {
-
-
         super.onServiceConnected()
     }
 
@@ -56,6 +66,11 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         mActivityInfoProvider = ActivityInfoProvider(SettingsActivity.instant!!)
         automator = SimpleActionAutomator(bridge)
         addAccessibilityServiceDelegates()
+
+        // 监控当前task
+        schedule.scheduleAtFixedRate(1, 1000, {
+            //TODO 退出
+        })
     }
 
 
@@ -68,7 +83,8 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         if (isOnXueApp()) {
             logger.info("在强国")
 //            toGetMyScore()
-            readTask.start()
+            videoTask.start()
+//            readTask.start()
         } else {
             logger.info("不在强国")
             Toast.makeText(SettingsActivity.instant, "请打开学习强国", Toast.LENGTH_SHORT)
@@ -109,6 +125,13 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
                 newSelector().id("comm_head_xuexi_score").click()
             }
         }
+    }
+
+    fun userCanSee(obj: UiObject): Boolean {
+        val bound = obj.bounds()
+        return bound.centerX() > 0 && bound.centerX() < ScreenMetrics.getDeviceScreenWidth()
+                // 去掉顶部和底部
+                && bound.centerY() > 200 && bound.centerY() < ScreenMetrics.getDeviceScreenHeight() - 200
     }
 
     // 查找我的积分
@@ -164,33 +187,122 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
     }
 
 
-    // 阅读
-    val readTask = Score(0, 12, suspend handler@{
-        setCurrentPage(XuePage.Main)
-        newSelector().id(idBtnMainTab).click()
-        newSelector().text("推荐").click()
+    suspend fun loopCard(onCard: suspend () -> Unit, onEnd: suspend () -> Boolean) {
         // general_card_title_id 标题
         val cards = newSelector().id("general_card_title_id").find()
-        for (i in 0..cards.size()) {
+        var lastCard: UiObject? = null
+        logger.info("card ${cards.size()}")
+        for (i in 0..cards.size() - 1) {
             val card = cards.get(i)
             if (card != null) {
-                var screenBound = Rect()
-                card.getBoundsInScreen(screenBound)
-                if (screenBound.left >= 0 && screenBound.left < 100 && screenBound.top > 0) {
+                if (userCanSee(card)) {
+                    lastCard = card
                     // 在首页的card
-                    logger.info("开始阅读 ${card.text()}")
-                    //TODO 判断今日已读时间
-                    card.click()
-                    // 阅读 6分钟
-                    delay((6 * 60 + 20) * 1000)
+                    val title = card.text()
+                    val key = "post-${title}"
+                    val old = Kv.get(key)
+                    if (old != null) {
+                        logger.info("已阅读 $title")
+                        continue
+                    }
+                    logger.info("开始阅读 ${title}")
+                    card.clickScreen()
+
+                    onCard()
                     logger.info("阅读结束")
-                    return@handler true
+                    val record = Kv().also {
+                        it.postName = title
+                        it.key = key
+                    }
+                    record.save()
+                    // 返回上一页
+                    automator.back()
+                    delay(3000)
+                    if (onEnd()) {
+                        return
+                    }
                 }
             }
         }
+        // 翻页
+        if (lastCard != null) lastCard.scrollToTop()
+    }
+
+    // 阅读
+    val readTask: Score = Score(0, 12, suspend handler@{
+        val task = instant.readTask
+        if (!task.needDo()) { //完成
+            return@handler true
+        }
+
+        setCurrentPage(XuePage.Main)
+        newSelector().id(idBtnMainTab).click()
+        val bj = newSelector().text("北京")
+        if (!bj.exists()) {
+            Toast.makeText(App.instant, "请现将地区设置为北京", Toast.LENGTH_SHORT).show()
+            logger.error("北京不存在")
+            return@handler false
+        }
+        bj.clickScreen()
+        delay(2000)
+        // general_card_title_id 标题
+        val cards = newSelector().id("general_card_title_id").find()
+        var lastCard: UiObject? = null
         logger.info("card ${cards.size()}")
-        // 点击要闻
-        true
+        loopCard({
+            // 阅读 1分钟
+            val readTime = 1 * 60 + 10
+            val delayTime = 10
+            for (j in 1..readTime / 10) {
+                logger.info("阅读loop $j")
+                delay(delayTime * 1000L)
+                //下滑一点
+                automator.swipe(
+                    (ScreenMetrics.getDeviceScreenWidth() * 0.5).toInt(),
+                    (ScreenMetrics.getDeviceScreenHeight() * 0.7).toInt(),
+                    (ScreenMetrics.getDeviceScreenWidth() * 0.55).toInt(),
+                    (ScreenMetrics.getDeviceScreenHeight() * 0.5).toInt(),
+                    1000
+                )
+            }
+        }, onEnd@{
+            task.reset -= 2
+            if (!task.needDo()) { //完成
+                return@onEnd true
+            }
+            false
+        })
+        // 翻页
+        task.doHandler()
+    })
+
+    //视听任务
+    val videoTask: Score = Score(0, 6, suspend handler@{
+        val task = instant.videoTask
+        if (!task.needDo()) { //完成
+            return@handler true
+        }
+
+        setCurrentPage(XuePage.Main)
+        newSelector().text("电视台").clickScreen()
+        newSelector().text("联播频道").clickScreen()
+
+        delay(2000)
+        // general_card_title_id 标题
+        val cards = newSelector().id("general_card_title_id").find()
+        var lastCard: UiObject? = null
+        logger.info("card ${cards.size()}")
+        for (i in 0..cards.size() - 1) {
+            val card = cards.get(i)
+            if (card != null) {
+                if (userCanSee(card)) {
+                    lastCard = card
+                }
+            }
+        }
+        // 翻页
+        if (lastCard != null) lastCard.scrollToTop()
+        task.doHandler()
     })
 //        val VideoNum = Score(1, 6)
 //        val VideoTime = Score(2, 6)
@@ -206,10 +318,14 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
 //        val BenDi = Score(12, 1)
 
     class Score(var type: Int, var max: Int, var doHandler: ScoreDoHandler) {
-        var reset = max
+        var reset: Int = max
 
         suspend fun start() {
             doHandler()
+        }
+
+        fun needDo(): Boolean {
+            return reset > 0
         }
     }
 
