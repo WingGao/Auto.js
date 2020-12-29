@@ -1,13 +1,17 @@
 package net.wingao.xue.service
 
 import android.graphics.Rect
+import android.os.Environment
 import android.widget.Toast
 import com.stardust.automator.UiObject
+import com.stardust.automator.filter.BooleanFilter
 import com.stardust.util.ScreenMetrics
 import com.stardust.util.UiHandler
 import com.stardust.view.accessibility.AccessibilityNotificationObserver
 import com.stardust.view.accessibility.AccessibilityService
 import com.stardust.view.accessibility.AccessibilityService.Companion.addDelegate
+import com.stardust.view.accessibility.LayoutInspector
+import com.stardust.view.accessibility.NodeInfo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -17,7 +21,9 @@ import net.wingao.xue.SettingsActivity
 import net.wingao.xue.auto.*
 import net.wingao.xue.entity.Kv
 import net.wingao.xue.entity.save
+import net.wingao.xue.utils.PrintTree
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.util.*
 import kotlin.concurrent.scheduleAtFixedRate
 
@@ -83,8 +89,9 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         if (isOnXueApp()) {
             logger.info("在强国")
 //            toGetMyScore()
-            videoTask.start()
+//            videoTask.start()
 //            readTask.start()
+            dingYueTask.start()
         } else {
             logger.info("不在强国")
             Toast.makeText(SettingsActivity.instant, "请打开学习强国", Toast.LENGTH_SHORT)
@@ -146,9 +153,21 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         logger.error("TODO 没有找到积分")
     }
 
-
+    // 打印空间树
     fun logAllViewInWindow() {
-
+        val inspector = LayoutInspector(this)
+        inspector.addCaptureAvailableListener(object : LayoutInspector.CaptureAvailableListener {
+            override fun onCaptureAvailable(capture: NodeInfo?) {
+                if (capture != null) {
+                    //打印dfs
+                    val saveFile =
+                        File(instant.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "dump-window.txt");
+                    saveFile.writeText(PrintTree.printDirectoryTree(capture))
+                    logger.info("完成logAllViewInWindow ${saveFile.absolutePath}")
+                }
+            }
+        })
+        inspector.captureCurrentWindow()
     }
 
     fun parseInt(t: String): Int? {
@@ -186,6 +205,10 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         None
     }
 
+    //找到当前最大的ListView
+    fun findMainListView() {
+
+    }
 
     suspend fun loopCard(onCard: suspend () -> Unit, onEnd: suspend () -> Boolean) {
         // general_card_title_id 标题
@@ -210,11 +233,7 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
 
                     onCard()
                     logger.info("阅读结束")
-                    val record = Kv().also {
-                        it.postName = title
-                        it.key = key
-                    }
-                    record.save()
+                    markCard(card)
                     // 返回上一页
                     automator.back()
                     delay(3000)
@@ -226,6 +245,26 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         }
         // 翻页
         if (lastCard != null) lastCard.scrollToTop()
+    }
+
+    // 判断卡片是否已读
+    fun checkCardCanRead(titleView: UiObject, dateView: UiObject? = null): Boolean {
+        var key = "post-${titleView.text()}"
+        if (dateView != null) key += "-${dateView.text()}"
+        val old = Kv.get(key)
+        return old == null
+    }
+
+    // 标记文章已完成
+    fun markCard(titleView: UiObject, dateView: UiObject? = null) {
+        var key = "post-${titleView.text()}"
+        if (dateView != null) key += "-${dateView.text()}"
+        val record = Kv().also {
+            it.postName = titleView.text()
+            it.key = key
+        }
+        record.save()
+        logger.info("标记 ${key} 已读")
     }
 
     // 阅读
@@ -277,34 +316,56 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
     })
 
     //视听任务
+    val videoTimeScore = Score(0, 6, suspend { false })
     val videoTask: Score = Score(0, 6, suspend handler@{
         val task = instant.videoTask
-        if (!task.needDo()) { //完成
+        if (!task.needDo() && !videoTimeScore.needDo()) { //完成
             return@handler true
         }
 
         setCurrentPage(XuePage.Main)
         newSelector().text("电视台").clickScreen()
-        newSelector().text("联播频道").clickScreen()
+        newSelector().text("学习视频").clickScreen()
+        newSelector().text("学习新视界").clickScreen()
+//        newSelector().text("联播频道").clickScreen()
 
-        delay(2000)
-        // general_card_title_id 标题
-        val cards = newSelector().id("general_card_title_id").find()
-        var lastCard: UiObject? = null
-        logger.info("card ${cards.size()}")
-        for (i in 0..cards.size() - 1) {
-            val card = cards.get(i)
-            if (card != null) {
-                if (userCanSee(card)) {
-                    lastCard = card
+        while (true) {
+            delay(2000)
+//        val timeDivs = newSelector().classNameX("TextView").textMatchesX("\\d\\d:\\d\\d").find()
+            val listView = newSelector().classNameX("ListView").findBiggest()
+            var lastCard: UiObject? = null
+            for (frame in listView.children().toArray()) {
+                if (frame != null && frame.className() == "android.widget.FrameLayout" && userCanSee(frame)) {
+                    val dateDiv = frame.findOne(newSelector().textMatches("\\d{4}-\\d{2}-\\d{2}"))!!
+                    val titleDiv = dateDiv.parent()!!.parent()!!.parent()!!.child(0)!!
+                    lastCard = dateDiv
+                    logger.info("title=${titleDiv.text()} date=${dateDiv.text()}")
+                    if (checkCardCanRead(titleDiv, dateDiv)) {
+                        titleDiv.clickScreen()
+                        //停留1分钟\
+                        //TODO 视频重置时间
+                        delay(70 * 1000)
+                        markCard(titleDiv, dateDiv)
+                        instant.videoTask.reset -= 1
+                        instant.videoTimeScore.reset -= 1
+                        // 返回上一页
+                        automator.back()
+                        delay(3000)
+                        if (!task.needDo() && !videoTimeScore.needDo()) { //完成
+                            return@handler true
+                        }
+                    } else {
+                        logger.info("已读")
+                    }
                 }
             }
+//        // 翻页
+            automator.scrollList(listView)
         }
-        // 翻页
-        if (lastCard != null) lastCard.scrollToTop()
-        task.doHandler()
+        true
     })
-//        val VideoNum = Score(1, 6)
+
+    //        val VideoNum = Score(1, 6)
 //        val VideoTime = Score(2, 6)
 //        val DailyAnswer = Score(3, 5)
 //        val WeeklyAnswer = Score(4, 5)
@@ -312,7 +373,27 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
 //        val Tiaozhan = Score(6, 6)
 //        val Zhenshangyou = Score(7, 5)
 //        val ShuangRen = Score(8, 2)
-//        val DingYue = Score(9, 2)
+    //订阅任务
+    val dingYueTask: Score = Score(9, 2, suspend handler@{
+        val task = instant.dingYueTask
+        if (!task.needDo()) { //完成
+            return@handler true
+        }
+        setCurrentPage(XuePage.Main)
+        newSelector().text("我的").clickScreen(1300)
+        newSelector().text("订阅").clickScreen(1300)
+        newSelector().text("添加").clickScreen(1300)
+        newSelector().text("上新").clickScreen(1300)
+        val sw = ScreenMetrics.getDeviceScreenWidth()
+        //查找list
+        val btnList = newSelector().classNameX("ImageView").filterX(object : BooleanFilter.BooleanSupplier {
+            override fun get(node: UiObject): Boolean {
+                return node.bounds().left > sw * 0.5
+            }
+        }).find()
+        // 判断颜色
+        true
+    })
 //        val FenXiang = Score(10, 1)
 //        val FaBiao = Score(11, 1)
 //        val BenDi = Score(12, 1)

@@ -3,7 +3,7 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:keepScreenOn="true">
+              android:keepScreenOn="true" android:background="#D8F8E7">
 
     <Button
             android:text="开始"

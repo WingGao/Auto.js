@@ -252,4 +252,11 @@ class SimpleActionAutomator(
         mScreenMetrics = metrics
     }
 
+    fun scrollList(list: UiObject, dy1: Int = -100, dy2: Int = 100) {
+        val b = list.bounds()
+        swipe(
+            b.centerX(), b.bottom + dy1,
+            b.centerX(), b.top + dy2, 2000
+        )
+    }
 }

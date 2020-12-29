@@ -1,7 +1,9 @@
 package net.wingao.xue.auto
 
 import com.stardust.automator.UiObject
+import com.stardust.automator.UiObjectCollection
 import com.stardust.util.ScreenMetrics
+import net.wingao.xue.App
 import net.wingao.xue.service.MyAccessibilityService2
 
 /**
@@ -26,4 +28,16 @@ fun UiObject.isOnScreen(): Boolean {
     val bound = bounds()
     return bound.centerX() > 0 && bound.centerX() < ScreenMetrics.getDeviceScreenWidth()
             && bound.centerY() > 0 && bound.centerY() < ScreenMetrics.getDeviceScreenHeight()
+}
+
+fun UiObjectCollection.biggest(): UiObject {
+    return this.toArray().maxByOrNull {
+        val sz = it!!.bounds().width() * it.bounds().height()
+        App.logger.info("$it, size=$sz")
+        sz
+    }!!
+}
+
+fun UiObjectCollection.highest(): UiObject {
+    return this.toArray().maxByOrNull { it!!.bounds().height() }!!
 }

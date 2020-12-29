@@ -88,7 +88,7 @@ class SettingsActivity : AppCompatActivity() {
             .with(getApplicationContext())
             .setView(floatView)
             .setWidth(Screen.width, widthR)                               //设置控件宽高
-            .setHeight(Screen.height, 0.3f)
+            .setHeight(300)
             .setX(Screen.width, 1 - widthR)  //设置控件初始位置,在右边，防止
             .setY(Screen.height, 0.8f)
             .setDesktopShow(true)                        //桌面显示
@@ -124,6 +124,7 @@ class SettingsActivity : AppCompatActivity() {
             })  //监听权限申请结果
             .build();
         val stateView = floatView.findViewById<TextView>(R.id.txtState)
+        // 开始按钮
         floatView.findViewById<Button>(R.id.btnStart).also {
             it.setOnClickListener {
                 stateView.text = "开启"
@@ -132,6 +133,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
+        //获取空间树按钮
         floatView.findViewById<Button>(R.id.btnDebug1).also {
             it.setOnClickListener {
                 GlobalScope.launch {

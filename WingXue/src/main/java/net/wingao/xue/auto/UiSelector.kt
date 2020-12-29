@@ -18,8 +18,12 @@ import com.stardust.automator.ActionArgument
 import com.stardust.automator.ActionArgument.IntActionArgument
 import com.stardust.automator.ActionArgument.CharSequenceActionArgument
 import com.stardust.automator.ActionArgument.FloatActionArgument
+import com.stardust.automator.filter.BooleanFilter
 import com.stardust.automator.filter.Filter
 import com.stardust.automator.filter.TextFilters
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import net.wingao.xue.BuildConfig
 import org.slf4j.LoggerFactory
 import java.lang.Error
@@ -62,6 +66,11 @@ class UiSelector : UiGlobalSelector {
         return find(Int.MAX_VALUE)
     }
 
+    // 找到最大的
+    fun findBiggest(): UiObject {
+        return find().biggest()
+    }
+
     protected fun findImpl(max: Int): UiObjectCollection {
         val roots = mAccessibilityBridge.windowRoots()
         logger.debug("find: roots = $roots")
@@ -85,8 +94,12 @@ class UiSelector : UiGlobalSelector {
         return of(result)
     }
 
-    override fun textMatches(regex: String): UiGlobalSelector {
-        return super.textMatches(convertRegex(regex))
+    fun classNameX(className: String): UiSelector {
+        return super.className(className) as UiSelector
+    }
+
+    fun textMatchesX(regex: String): UiSelector {
+        return super.textMatches(convertRegex(regex)) as UiSelector
     }
 
     // TODO: 2018/1/30 更好的实现方式。
@@ -110,6 +123,10 @@ class UiSelector : UiGlobalSelector {
 
     override fun descMatches(regex: String): UiGlobalSelector {
         return super.descMatches(convertRegex(regex))
+    }
+
+    fun filterX(filter: BooleanFilter.BooleanSupplier): UiSelector {
+        return this.filter(filter) as UiSelector
     }
 
     private fun ensureAccessibilityServiceEnabled() {
@@ -344,9 +361,14 @@ class UiSelector : UiGlobalSelector {
         )
     }
 
-    fun clickScreen() {
+    fun clickScreen(delayMs: Int = 0) {
         untilFind().toArray().forEach {
             if (it != null) it.clickScreen()
+        }
+        if (delayMs > 0) {
+            runBlocking {
+                delay(delayMs.toLong())
+            }
         }
     }
 }

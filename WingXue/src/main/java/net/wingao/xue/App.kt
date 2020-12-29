@@ -11,9 +11,10 @@ import org.slf4j.LoggerFactory
 class App : Application() {
     companion object {
         lateinit var instant: Application
+        val logger = LoggerFactory.getLogger(App::class.java)
     }
 
-    val logger = LoggerFactory.getLogger(this.javaClass)
+
     override fun onCreate() {
         super.onCreate()
 

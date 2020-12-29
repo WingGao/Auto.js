@@ -143,6 +143,16 @@ class NodeInfo(resources: Resources?, node: UiObject, var parent: NodeInfo?) {
                 '}'.toString()
     }
 
+    fun simple(): String {
+        return className + "{" +
+                ", mBoundsInScreen=" + boundsInScreen +
+                ", mBoundsInParent=" + boundsInParent +
+                ", id='" + id + '\''.toString() +
+                ", desc='" + desc + '\''.toString() +
+                ", text='" + text + '\''.toString() +
+                '}'
+    }
+
     companion object {
 
         fun boundsToString(rect: Rect): String {
@@ -150,7 +160,12 @@ class NodeInfo(resources: Resources?, node: UiObject, var parent: NodeInfo?) {
         }
 
 
-        internal fun capture(resourcesCache: HashMap<String, Resources>, context: Context, uiObject: UiObject, parent: NodeInfo?): NodeInfo {
+        internal fun capture(
+            resourcesCache: HashMap<String, Resources>,
+            context: Context,
+            uiObject: UiObject,
+            parent: NodeInfo?
+        ): NodeInfo {
             val pkg = uiObject.packageName()
             var resources: Resources? = null
             if (pkg != null) {
