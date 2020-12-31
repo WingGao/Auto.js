@@ -1,8 +1,21 @@
 package net.wingao.xue.service
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Rect
+import android.os.Build
 import android.os.Environment
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import com.stardust.app.OnActivityResultDelegate.DelegateHost
+import com.stardust.autojs.core.image.capture.ScreenCaptureRequestActivity
+import com.stardust.autojs.core.image.capture.ScreenCaptureRequester
+import com.stardust.autojs.core.image.capture.ScreenCaptureRequester.AbstractScreenCaptureRequester
+import com.stardust.autojs.core.image.capture.ScreenCaptureRequester.ActivityScreenCaptureRequester
+import com.stardust.autojs.core.image.capture.ScreenCapturer
+import com.stardust.autojs.core.util.ScriptPromiseAdapter
+import com.stardust.autojs.runtime.ScriptRuntime
+import com.stardust.autojs.runtime.api.Images
 import com.stardust.automator.UiObject
 import com.stardust.automator.filter.BooleanFilter
 import com.stardust.util.ScreenMetrics
@@ -36,6 +49,7 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
 
     lateinit var bridge: AccessibilityBridge
     lateinit var mActivityInfoProvider: ActivityInfoProvider
+    lateinit var scriptRuntime: ScriptRuntime
 
     var connected = false
     var currentTask: Score? = null
@@ -77,6 +91,11 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         schedule.scheduleAtFixedRate(1, 1000, {
             //TODO 退出
         })
+        scriptRuntime = ScriptRuntime.Builder()
+            .setUiHandler(UiHandler(this))
+            .setScreenCaptureRequester(ScreenCaptureRequesterImpl())
+            .build()
+        scriptRuntime.init()
     }
 
 
@@ -90,8 +109,8 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
             logger.info("在强国")
 //            toGetMyScore()
 //            videoTask.start()
-//            readTask.start()
-            dingYueTask.start()
+            readTask.start()
+//            dingYueTask.start()
         } else {
             logger.info("不在强国")
             Toast.makeText(SettingsActivity.instant, "请打开学习强国", Toast.LENGTH_SHORT)
@@ -380,10 +399,10 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
             return@handler true
         }
         setCurrentPage(XuePage.Main)
-        newSelector().text("我的").clickScreen(1300)
-        newSelector().text("订阅").clickScreen(1300)
-        newSelector().text("添加").clickScreen(1300)
-        newSelector().text("上新").clickScreen(1300)
+//        newSelector().text("我的").clickScreen(1300)
+//        newSelector().text("订阅").clickScreen(1300)
+//        newSelector().text("添加").clickScreen(1300)
+//        newSelector().text("上新").clickScreen(1300)
         val sw = ScreenMetrics.getDeviceScreenWidth()
         //查找list
         val btnList = newSelector().classNameX("ImageView").filterX(object : BooleanFilter.BooleanSupplier {
@@ -391,6 +410,16 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
                 return node.bounds().left > sw * 0.5
             }
         }).find()
+        //截屏
+        val img = Images(this, scriptRuntime, ScreenCaptureRequesterImpl())
+        img.requestScreenCapture(ScreenCapturer.ORIENTATION_AUTO).onResolve(object : ScriptPromiseAdapter.Callback {
+            override fun call(arg: Any?) {
+                logger.info("requestScreenCapture resolve", arg)
+                val imgPath = File(instant.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "a.png")
+                logger.info("保存在 $imgPath")
+                img.captureScreen(imgPath.absolutePath)
+            }
+        })
         // 判断颜色
         true
     })
@@ -410,6 +439,20 @@ class MyAccessibilityService2 : com.stardust.view.accessibility.AccessibilitySer
         }
     }
 
+
+    private class ScreenCaptureRequesterImpl : AbstractScreenCaptureRequester() {
+        override fun setOnActivityResultCallback(callback: ScreenCaptureRequester.Callback) {
+            super.setOnActivityResultCallback { result: Int, data: Intent ->
+                mResult = data
+                callback.onRequestResult(result, data)
+            }
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+        override fun request() {
+            ScreenCaptureRequestActivity.request(instant, mCallback)
+        }
+    }
 }
 
 typealias ScoreDoHandler = suspend () -> Boolean

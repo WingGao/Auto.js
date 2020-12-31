@@ -14,6 +14,8 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
+import com.stardust.app.OnActivityResultDelegate
+import com.stardust.app.OnActivityResultDelegate.DelegateHost
 import com.stardust.util.ScreenMetrics
 import com.yhao.floatwindow.FloatWindow
 import com.yhao.floatwindow.PermissionListener
@@ -30,7 +32,7 @@ import kotlin.concurrent.schedule
 import kotlin.concurrent.timer
 
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : AppCompatActivity(), DelegateHost {
     companion object {
         @JvmStatic
         var instant: SettingsActivity? = null
@@ -192,6 +194,10 @@ class SettingsActivity : AppCompatActivity() {
             logger.info("无障碍已关闭")
         }
         return false
+    }
+
+    override fun getOnActivityResultDelegateMediator(): OnActivityResultDelegate.Mediator {
+        TODO("Not yet implemented")
     }
 
 

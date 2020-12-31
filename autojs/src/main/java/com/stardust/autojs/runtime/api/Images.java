@@ -83,11 +83,11 @@ public class Images {
             promiseAdapter.resolve(true);
             return promiseAdapter;
         }
-        Looper servantLooper = mScriptRuntime.loopers.getServantLooper();
+
         mScreenCaptureRequester.setOnActivityResultCallback((result, data) -> {
             if (result == Activity.RESULT_OK) {
                 mScreenCapturer = new ScreenCapturer(mContext, data, orientation, ScreenMetrics.getDeviceScreenDensity(),
-                        new Handler(servantLooper));
+                        new Handler(Looper.myLooper()));
                 promiseAdapter.resolve(true);
             } else {
                 promiseAdapter.resolve(false);

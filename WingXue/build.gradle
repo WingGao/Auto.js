@@ -24,6 +24,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+repositories {
+    flatDir {
+//        dirs 'libs'
+        dirs 'D:\\Projs\\Autojs\\autojs\\libs'
+    }
+    google()
 }
 
 dependencies {
@@ -41,6 +54,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     api project(path: ':automator')
+    api project(path: ':autojs')
+//    api(name: 'opencv-3.4.3', ext: 'aar')
 }
 
 kapt {

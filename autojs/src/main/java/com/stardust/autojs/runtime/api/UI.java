@@ -39,17 +39,18 @@ public class UI extends ProxyObject {
         mContext = context;
         mRuntime = runtime;
         mResourceParser = new ResourceParser(new Drawables());
-        mDynamicLayoutInflater = new DynamicLayoutInflater(mResourceParser);
-        mDynamicLayoutInflater.setContext(context);
-        mDynamicLayoutInflater.registerViewAttrSetter(JsImageView.class.getName(),
-                new JsImageViewInflater(mResourceParser));
-        mDynamicLayoutInflater.registerViewAttrSetter(JsListView.class.getName(),
-                new JsListViewInflater(mResourceParser, runtime));
-        mDynamicLayoutInflater.registerViewAttrSetter(JsGridView.class.getName(),
-                new JsGridViewInflater(mResourceParser, runtime));
-        mDynamicLayoutInflater.registerViewAttrSetter(ScriptCanvasView.class.getName(),
-                new CanvasViewInflater(mResourceParser, runtime));
-        mProperties.put("layoutInflater", this.mDynamicLayoutInflater);
+        //fixme wing
+//        mDynamicLayoutInflater = new DynamicLayoutInflater(mResourceParser);
+//        mDynamicLayoutInflater.setContext(context);
+//        mDynamicLayoutInflater.registerViewAttrSetter(JsImageView.class.getName(),
+//                new JsImageViewInflater(mResourceParser));
+//        mDynamicLayoutInflater.registerViewAttrSetter(JsListView.class.getName(),
+//                new JsListViewInflater(mResourceParser, runtime));
+//        mDynamicLayoutInflater.registerViewAttrSetter(JsGridView.class.getName(),
+//                new JsGridViewInflater(mResourceParser, runtime));
+//        mDynamicLayoutInflater.registerViewAttrSetter(ScriptCanvasView.class.getName(),
+//                new CanvasViewInflater(mResourceParser, runtime));
+//        mProperties.put("layoutInflater", this.mDynamicLayoutInflater);
     }
 
     public DynamicLayoutInflater getDynamicLayoutInflater() {

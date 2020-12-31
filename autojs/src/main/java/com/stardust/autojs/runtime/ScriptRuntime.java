@@ -136,11 +136,11 @@ public class ScriptRuntime {
     @ScriptVariable
     public final Console console;
 
-    @ScriptVariable
-    public final SimpleActionAutomator automator;
-
-    @ScriptVariable
-    public final ActivityInfoProvider info;
+//    @ScriptVariable
+//    public final SimpleActionAutomator automator;
+//
+//    @ScriptVariable
+//    public final ActivityInfoProvider info;
 
     @ScriptVariable
     public final UI ui;
@@ -163,8 +163,8 @@ public class ScriptRuntime {
     @ScriptVariable
     public Device device;
 
-    @ScriptVariable
-    public final AccessibilityBridge accessibilityBridge;
+//    @ScriptVariable
+//    public final AccessibilityBridge accessibilityBridge;
 
     @ScriptVariable
     public final Engines engines;
@@ -209,12 +209,12 @@ public class ScriptRuntime {
         Context context = uiHandler.getContext();
         app = builder.mAppUtils;
         console = builder.mConsole;
-        accessibilityBridge = builder.mAccessibilityBridge;
+//        accessibilityBridge = builder.mAccessibilityBridge;
         mShellSupplier = builder.mShellSupplier;
         ui = new UI(context, this);
-        this.automator = new SimpleActionAutomator(accessibilityBridge, this);
-        automator.setScreenMetrics(mScreenMetrics);
-        this.info = accessibilityBridge.getInfoProvider();
+//        this.automator = new SimpleActionAutomator(accessibilityBridge, this);
+//        automator.setScreenMetrics(mScreenMetrics);
+//        this.info = accessibilityBridge.getInfoProvider();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             images = new Images(context, this, builder.mScreenCaptureRequester);
         }
@@ -232,9 +232,9 @@ public class ScriptRuntime {
             throw new IllegalStateException("already initialized");
         threads = new Threads(this);
         timers = new Timers(this);
-        loopers = new Loopers(this);
-        events = new Events(uiHandler.getContext(), accessibilityBridge, this);
-        mThread = Thread.currentThread();
+//        loopers = new Loopers(this);
+//        events = new Events(uiHandler.getContext(), accessibilityBridge, this);
+//        mThread = Thread.currentThread();
         sensors = new Sensors(uiHandler.getContext(), this);
     }
 
@@ -264,9 +264,9 @@ public class ScriptRuntime {
         return uiHandler;
     }
 
-    public AccessibilityBridge getAccessibilityBridge() {
-        return accessibilityBridge;
-    }
+//    public AccessibilityBridge getAccessibilityBridge() {
+//        return accessibilityBridge;
+//    }
 
     public void toast(final String text) {
         uiHandler.toast(text);
@@ -319,9 +319,9 @@ public class ScriptRuntime {
         return ProcessShell.execCommand(cmd, root != 0);
     }
 
-    public UiSelector selector() {
-        return new UiSelector(accessibilityBridge);
-    }
+//    public UiSelector selector() {
+//        return new UiSelector(accessibilityBridge);
+//    }
 
     public boolean isStopped() {
         return Thread.currentThread().isInterrupted();
@@ -391,7 +391,7 @@ public class ScriptRuntime {
     }
 
     public void ensureAccessibilityServiceEnabled() {
-        accessibilityBridge.ensureServiceEnabled();
+//        accessibilityBridge.ensureServiceEnabled();
     }
 
     public void onExit() {

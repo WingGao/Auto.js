@@ -91,7 +91,7 @@ public class Sensors extends EventEmitter implements Loopers.LooperQuitHandler {
         mScriptBridges = runtime.bridges;
         mNoOpSensorEventEmitter = new SensorEventEmitter(runtime.bridges);
         mScriptRuntime = runtime;
-        runtime.loopers.addLooperQuitHandler(this);
+//        runtime.loopers.addLooperQuitHandler(this);
     }
 
     public SensorEventEmitter register(String sensorName) {
